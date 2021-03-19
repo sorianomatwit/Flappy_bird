@@ -37,14 +37,6 @@ public class Flappy_Bird extends PApplet {
 		}
 	}
 
-	public void keyPressed() {
-		if (keyCode == RIGHT) {
-			if(cycles != 100) cycles++;
-		}
-		if (keyCode == LEFT) {
-			if(cycles != 1) cycles--;
-		}
-	}
 
 	public void draw() {
 		background(0);
@@ -118,7 +110,13 @@ public class Flappy_Bird extends PApplet {
 	}
 	// -----------------------------------------------------------------------
 
-//	public void keyPressed() {
+	public void keyPressed() {
+		if (keyCode == RIGHT) {
+			if(cycles != 100) cycles++;
+		}
+		if (keyCode == LEFT) {
+			if(cycles != 1) cycles--;
+		}
 //		if(!play) {
 //			birds.get(0).setDead(false);
 //			birds.get(0).setScore(0);
@@ -132,7 +130,7 @@ public class Flappy_Bird extends PApplet {
 //		if (key == 32 && !birds.get(0).isDead()) {
 //			birds.get(0).jump();
 //		}		
-//	}
+	}
 
 	// ---------------------------------------------------------
 	// PIPE CLASS
@@ -308,7 +306,7 @@ public class Flappy_Bird extends PApplet {
 		public NeuralNetwork brain;
 
 		public Bird() {
-			brain = new NeuralNetwork(4, 8, 2);
+			brain = new NeuralNetwork(5, 6, 2);
 			brain.setLearningRate(0.5);
 			y = height / 2;
 			x = width / 3;
@@ -359,14 +357,15 @@ public class Flappy_Bird extends PApplet {
 			closepipe.isClose();
 			// System.out.printf("Pipe: %d%n",closepipe.getLabel());
 
-			double[] inputs = new double[4];
+			double[] inputs = new double[5];
 			inputs[0] = y / height;
 			inputs[1] = closepipe.getHeight_T() / height;
 			inputs[2] = closepipe.getY_B() / height;
 			inputs[3] = closepipe.getX() / width;
+			inputs[4] = vsp / 10.0;
 
 			double[] output = brain.predict(inputs);
-			if (output[0] > output[1]) {
+			if (output[0] > output[1] && vsp >= 0) {
 				jump();
 			}
 		}

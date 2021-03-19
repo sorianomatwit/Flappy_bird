@@ -1,4 +1,6 @@
 package Toy_Neural_Network;
+import Toy_Neural_Network.Matrix_instance;
+import Toy_Neural_Network.func;
 import processing.core.PApplet;
 
 public class Matrix {
@@ -45,9 +47,9 @@ public class Matrix {
 	// Transpose matrix
 	static public Matrix_instance transpose(Matrix_instance m) {
 		Matrix_instance results = new Matrix_instance(m.getCols(), m.getRows());
-		for (int i = 0; i < m.getRows(); i++) {
-			for (int j = 0; j < m.getCols(); j++) {
-				results.setValue(j, i, m.getValue(i, j));
+		for (int i = 0; i < results.getRows(); i++) {
+			for (int j = 0; j < results.getCols(); j++) {
+				results.setValue(i, j, m.getValue(j, i));
 			}
 		}
 		return results;
