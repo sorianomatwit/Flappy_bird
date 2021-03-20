@@ -11,7 +11,7 @@ public class NeuralNetwork {
 	private Matrix_instance bias_h;
 	private Matrix_instance bias_o;
 
-	private double alpha = (double) 0.1;
+	private double alpha = 0.1;
 
 	public NeuralNetwork(int input_nodes, int hidden_nodes, int output_nodes) {
 		this.input_nodes = input_nodes;
@@ -159,5 +159,7 @@ public class NeuralNetwork {
 	public int getOutputNodes() {
 		return this.output_nodes;
 	}
-
+	public double getLearningRate() {
+		return alpha;
+	}
 }

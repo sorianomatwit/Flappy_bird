@@ -1,6 +1,8 @@
 package game;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 
 import processing.core.PApplet;
 import Toy_Neural_Network.NeuralNetwork;
@@ -74,8 +76,8 @@ public class Flappy_Bird extends PApplet {
 				// player actions
 
 				flappy.think(pipes);
-				if (play)
-					flappy.fall();
+				flappy.fall();
+				
 				if (flappy.isDead()) {
 					savedBirds.add(flappy);
 					birds.remove(i);
@@ -250,21 +252,21 @@ public class Flappy_Bird extends PApplet {
 			this.calculateFitness(sb);
 
 			for (int i = 0; i < pop; i++) {
-				b.add(pickOne(sb, sb.get(i).getFitness()));
+				b.add(pickOne(sb));
 			}
 			sb.clear();
 			genNum++;
 			return b;
 		}
 
-		public Bird pickOne(ArrayList<Bird> b, double prob) {
+		public Bird pickOne(ArrayList<Bird> b) {
 			int index = 0;
-			double r = Math.random();
-			while (r > 0) {
-				r -= b.get(index).getFitness();
-				index++;
+			ArrayList<Double> savefit = new ArrayList<Double>();
+			for(Bird f: b) {
+				savefit.add(f.getFitness());
 			}
-			index--;
+			Collections.sort(savefit);
+			///check collectd to roder the bird in least from great in terms of their fitness;
 			Bird s = b.get(index);
 			Bird child = new Bird(s.brain);
 			child.MyMutate();
@@ -276,12 +278,12 @@ public class Flappy_Bird extends PApplet {
 			double sum = 0.0;
 			// ArrayList<Double> copyArrayList = new ArrayList<Double>();
 			for (Bird f : b) {
-				//sum += f.getScore();
-				sum+=f.getLifespan();
+				sum += f.getScore();
+				//sum+=f.getLifespan();
 			}
 			for (Bird f : b) {
-				//f.setFitness(f.getScore() / sum);
-				f.setFitness(f.getLifespan() / sum);
+				f.setFitness(f.getScore() / sum);
+				//f.setFitness(f.getLifespan() / sum);
 				// System.out.printf("Bird %d fitness: %f%n",i,sum,f.getFitness());
 				// i++;
 			}
@@ -306,8 +308,8 @@ public class Flappy_Bird extends PApplet {
 		public NeuralNetwork brain;
 
 		public Bird() {
-			brain = new NeuralNetwork(5, 6, 2);
-			brain.setLearningRate(0.5);
+			brain = new NeuralNetwork(5, 10, 2);
+			//brain.setLearningRate(0.5);
 			y = height / 2;
 			x = width / 3;
 			mass = 30;
@@ -448,6 +450,7 @@ public class Flappy_Bird extends PApplet {
 			}
 			y += vsp;
 			lifespan++;
+			
 		}
 
 		public void setVsp(double x) {
