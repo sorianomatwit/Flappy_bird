@@ -107,6 +107,10 @@ public class Matrix_instance {
 		}
 		return arr;
 	}
+	public double[][] toMatrix() {
+		
+		return data;
+	}
 	 public Matrix_instance copy() {
 		 Matrix_instance m = new Matrix_instance(this.rows, this.cols);
 		    for (int i = 0; i < this.rows; i++) {

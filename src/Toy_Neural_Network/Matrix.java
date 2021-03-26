@@ -84,7 +84,13 @@ public class Matrix {
 
 		return temp;
 	}
-
+	//-------------------------------------------------
+	static public Matrix_instance copy(Matrix_instance m) {
+		Matrix_instance results = m;
+		
+		return results;
+		
+	}
 	// -----------------------------------------------
 	static public Matrix_instance Product(double[][] m, double[][] n) {
 		Matrix_instance temp = new Matrix_instance(m.length, n[0].length);

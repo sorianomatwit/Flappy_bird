@@ -3,6 +3,7 @@ package game;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 
 import processing.core.PApplet;
 import Toy_Neural_Network.NeuralNetwork;
@@ -24,7 +25,8 @@ public class Flappy_Bird extends PApplet {
 	int cycles = 1;
 	boolean play = true;
 	public static final int Pop_Total = 350;
-
+	public double universalLR = 0.1;
+	int highestscore = 0;
 	// identical use to setup in Processing IDE except for size()
 	public void setup() {
 		pipes = new ArrayList<Pipe>();
@@ -35,10 +37,9 @@ public class Flappy_Bird extends PApplet {
 			pipes.add(new Pipe(i));
 		}
 		for (int i = 0; i < Pop_Total; i++) {
-			birds.add(new Bird());
+			birds.add(new Bird(i));
 		}
 	}
-
 
 	public void draw() {
 		background(0);
@@ -65,6 +66,9 @@ public class Flappy_Bird extends PApplet {
 					}
 
 					if (flappy.die(p)) {
+						if(flappy.getScore() < 0) {
+							flappy.stupid = true;
+						}
 						flappy.setDead(true);
 					}
 				}
@@ -77,7 +81,7 @@ public class Flappy_Bird extends PApplet {
 
 				flappy.think(pipes);
 				flappy.fall();
-				
+
 				if (flappy.isDead()) {
 					savedBirds.add(flappy);
 					birds.remove(i);
@@ -100,6 +104,10 @@ public class Flappy_Bird extends PApplet {
 		textAlign(LEFT);
 		fill(255);
 		text("Cycles: " + cycles, 30, 120);
+		textSize(30);
+		textAlign(LEFT);
+		fill(255);
+		text("Best Score: " + highestscore, 30, 150);
 
 	}
 
@@ -114,10 +122,12 @@ public class Flappy_Bird extends PApplet {
 
 	public void keyPressed() {
 		if (keyCode == RIGHT) {
-			if(cycles != 100) cycles++;
+			if (cycles != 100)
+				cycles++;
 		}
 		if (keyCode == LEFT) {
-			if(cycles != 1) cycles--;
+			if (cycles != 1)
+				cycles--;
 		}
 //		if(!play) {
 //			birds.get(0).setDead(false);
@@ -139,10 +149,10 @@ public class Flappy_Bird extends PApplet {
 	public class Pipe {
 
 		private double x, y;
-		private float r= 0,b= 0,g = 255;
-		
+		private float r = 0, b = 0, g = 255;
+
 		private boolean closs = false;
-		
+
 		private double[] heights = new double[2];
 		private double w = 50;
 		private double playermass = 30;
@@ -202,10 +212,11 @@ public class Flappy_Bird extends PApplet {
 		public void isClose() {
 			closs = true;
 		}
+
 		public void show() {
 			strokeWeight(2);
 			stroke(127);
-			if(closs) {
+			if (closs) {
 				r = 255;
 				g = 0;
 			} else {
@@ -250,9 +261,9 @@ public class Flappy_Bird extends PApplet {
 		public ArrayList<Bird> nextGenertion(ArrayList<Bird> sb, int pop) {
 			ArrayList<Bird> b = new ArrayList<Bird>();
 			this.calculateFitness(sb);
-
+			Bird newspecies = pickOne(sb);
 			for (int i = 0; i < pop; i++) {
-				b.add(pickOne(sb));
+				b.add(new Bird(newspecies.brain));
 			}
 			sb.clear();
 			genNum++;
@@ -260,34 +271,55 @@ public class Flappy_Bird extends PApplet {
 		}
 
 		public Bird pickOne(ArrayList<Bird> b) {
-			int index = 0;
-			ArrayList<Double> savefit = new ArrayList<Double>();
-			for(Bird f: b) {
-				savefit.add(f.getFitness());
-			}
-			Collections.sort(savefit);
-			///check collectd to roder the bird in least from great in terms of their fitness;
-			Bird s = b.get(index);
+			ArrayList<Bird> savefit = b;
+
+			Collections.sort(savefit, new Comparator<Bird>() {
+				@Override
+				public int compare(Bird o1, Bird o2) {
+					return Double.valueOf(o2.getFitness()).compareTo(o1.getFitness());
+				}
+			});
+//			for (int k = 0; k < b.size(); k++) {
+//				System.out.printf("%s%n", savefit.get(k));
+//			}
+			/// check collectd to roder the bird in least from great in terms of their
+			/// fitness;
+			Bird s = savefit.get(0);
 			Bird child = new Bird(s.brain);
 			child.MyMutate();
+			
+			
 			return child;
 
 		}
 
 		public void calculateFitness(ArrayList<Bird> b) {
 			double sum = 0.0;
-			// ArrayList<Double> copyArrayList = new ArrayList<Double>();
+			double scoresum = 0.0;
+			ArrayList<Bird> copybird = b;
+			Collections.sort(copybird, new Comparator<Bird>() {
+				@Override
+				public int compare(Bird o1, Bird o2) {
+					return Integer.valueOf(o2.getScore()).compareTo(o1.getScore());
+				}
+			});
 			for (Bird f : b) {
-				sum += f.getScore();
-				//sum+=f.getLifespan();
+				sum += f.getLifespan();
 			}
+			if(copybird.get(0).getScore() > highestscore) { 
+				highestscore = copybird.get(0).getScore();
+				universalLR -=0.01;
+			} else {
+				
+			}
+			int i = 0;
 			for (Bird f : b) {
-				f.setFitness(f.getScore() / sum);
-				//f.setFitness(f.getLifespan() / sum);
-				// System.out.printf("Bird %d fitness: %f%n",i,sum,f.getFitness());
-				// i++;
+				// f.setFitness(f.getScore() / sum);
+				f.setFitness(f.getLifespan() / sum);
+				 //System.out.printf("Bird %d fitness: %f%n",i,f.getFitness());
+				 i++;
 			}
-
+			
 		}
 	}
 
@@ -299,17 +331,20 @@ public class Flappy_Bird extends PApplet {
 		private double grv = (double) 0.3;
 		private double mass;
 
+		private int birdnum;
 		private boolean dead = false;
 		private int Score = 0;
 		private int savedLabel = -1;
 
+		boolean stupid = false;
 		private double fitness = 0;
-		private int lifespan = 0;
+		private double lifespan = 0;
 		public NeuralNetwork brain;
 
-		public Bird() {
-			brain = new NeuralNetwork(5, 10, 2);
-			//brain.setLearningRate(0.5);
+		public Bird(int i) {
+			birdnum = i;
+			brain = new NeuralNetwork(8, 10, 2);
+			brain.setLearningRate(universalLR);
 			y = height / 2;
 			x = width / 3;
 			mass = 30;
@@ -323,19 +358,23 @@ public class Flappy_Bird extends PApplet {
 		}
 
 		public void MyMutate() {
-			this.brain.mutate(i -> specialMut(i,0.05));
+			//this.brain.mutate(i -> specialMut(i, 0.1));
+			this.brain.mutate(0.01);
 		}
-		
+
 		public double specialMut(double x, double rate) {
-			double rand = randomGaussian()*0.1;
-			if(Math.random() < rate) {
-				return x+ rand;
-			} 
-			return x;
+			System.out.printf("hello%n%f%n",x);
+			
+			double rand = random((float) -0.1,(float) 0.1);
+			if (rand < rate) {
+				return x + rand;
+			}
+			return (Math.random() * 2 -1);
 		}
 
 		public void think(ArrayList<Pipe> p) {
 			Pipe closepipe;
+			Pipe ndpipe;
 			double[] closeX = new double[p.size()];
 			for (int i = 0; i < p.size(); i++) {
 				Pipe a = p.get(i);
@@ -343,6 +382,7 @@ public class Flappy_Bird extends PApplet {
 				// System.out.printf("CloseX[%d]: %f%n",i,closeX[i]);
 			}
 			int lowindex = 0;
+			int ndindex = 0;;
 			for (int j = 0; j < closeX.length; j++) {
 				if (closeX[lowindex] > closeX[j]) {
 					lowindex = j;
@@ -354,18 +394,24 @@ public class Flappy_Bird extends PApplet {
 					}
 				}
 			}
-			
+			if(lowindex != p.size() - 1) {
+				ndindex = lowindex+1;
+			} else ndindex = 0;
+			ndpipe = p.get(ndindex);
+			ndpipe.isClose();
 			closepipe = p.get(lowindex);
 			closepipe.isClose();
 			// System.out.printf("Pipe: %d%n",closepipe.getLabel());
 
-			double[] inputs = new double[5];
+			double[] inputs = new double[8];
 			inputs[0] = y / height;
 			inputs[1] = closepipe.getHeight_T() / height;
 			inputs[2] = closepipe.getY_B() / height;
 			inputs[3] = closepipe.getX() / width;
 			inputs[4] = vsp / 10.0;
-
+			inputs[5] = ndpipe.getHeight_T() / height;
+			inputs[6] = ndpipe.getY_B() / height;
+			inputs[7] = ndpipe.getX() / width;
 			double[] output = brain.predict(inputs);
 			if (output[0] > output[1] && vsp >= 0) {
 				jump();
@@ -424,7 +470,7 @@ public class Flappy_Bird extends PApplet {
 				fill(255, 0, 0);
 			}
 			ellipse((float) x, (float) y, (float) mass, (float) mass);
-			
+
 		}
 
 		private int sign(double i) {
@@ -437,6 +483,7 @@ public class Flappy_Bird extends PApplet {
 		}
 
 		public void fall() {
+			lifespan++;
 			if (y - mass / 2 < 0) {
 				y = mass / 2;
 				dead = true;
@@ -449,8 +496,7 @@ public class Flappy_Bird extends PApplet {
 				vsp = 0;
 			}
 			y += vsp;
-			lifespan++;
-			
+
 		}
 
 		public void setVsp(double x) {
@@ -458,7 +504,7 @@ public class Flappy_Bird extends PApplet {
 		}
 
 		public boolean die(Pipe p) {
-			if (collision(p) || y+mass/2+1 > height) {
+			if (collision(p) || y + mass / 2 + 1 > height) {
 				// flappy.setY(-100);
 				return true;
 			}
@@ -480,6 +526,13 @@ public class Flappy_Bird extends PApplet {
 				return true;
 			}
 			return false;
+		}
+
+		@Override
+		public String toString() {
+			String s = String.format("Bird %d: %f", birdnum, fitness);
+
+			return s;
 		}
 	}
 

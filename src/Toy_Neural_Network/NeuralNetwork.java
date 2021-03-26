@@ -33,6 +33,12 @@ public class NeuralNetwork {
 
 	public NeuralNetwork(NeuralNetwork n) {
 		this(n.getInputNodes(),n.getHiddenNodes(),n.getOutputNodes());
+//		this.bias_o = n.getBias_O();
+//		this.bias_h = n.getBias_H();
+		this.weights_ho = n.getWeights_HO();
+		this.weights_ih = n.getWeights_IH();
+		this.bias_o.randomise();
+		this.bias_h.randomise();
 	}
 	
 	
@@ -161,5 +167,18 @@ public class NeuralNetwork {
 	}
 	public double getLearningRate() {
 		return alpha;
+	}
+	
+	public Matrix_instance getBias_O() {
+		return bias_o;
+	}
+	public Matrix_instance getBias_H() {
+		return bias_h;
+	}
+	public Matrix_instance getWeights_IH() {
+		return weights_ih;
+	}
+	public Matrix_instance getWeights_HO() {
+		return weights_ho;
 	}
 }
